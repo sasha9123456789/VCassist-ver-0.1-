@@ -1,13 +1,14 @@
 @echo off
 :: Установщик голосового ассистента
 :: Автоматически устанавливает Python, зависимости и настраивает приложение
+:: Использует репозиторий: https://github.com/sasha9123456789/VCASForInstall.git
 
-set ASSISTANT_DIR=%USERPROFILE%\VCAS
+set ASSISTANT_DIR=%USERPROFILE%\VoiceAssistant
 set PYTHON_VERSION=3.10.6
 set PYTHON_URL=https://www.python.org/ftp/python/%PYTHON_VERSION%/python-%PYTHON_VERSION%-amd64.exe
-set REPO_URL=https://github.com/yourusername/voice-assistant/archive/main.zip
+set REPO_URL=https://github.com/sasha9123456789/VCASForInstall.git
 
-echo Установка голосового ассистента v0.1 ...
+echo Установка голосового ассистента...
 echo.
 
 :: Проверка и установка Python
@@ -28,40 +29,55 @@ if not exist "%ASSISTANT_DIR%" (
     echo Создана директория для ассистента: %ASSISTANT_DIR%
 )
 
-:: Загрузка кода ассистента
-echo Загрузка кода ассистента...
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%REPO_URL%', '%ASSISTANT_DIR%\assistant.zip')"
-powershell -Command "Expand-Archive -Path '%ASSISTANT_DIR%\assistant.zip' -DestinationPath '%ASSISTANT_DIR%' -Force"
-del "%ASSISTANT_DIR%\assistant.zip"
+:: Клонирование репозитория
+echo Загрузка кода ассистента из репозитория...
+where git >nul 2>nul
+if %errorlevel% neq 0 (
+    echo Git не установлен. Устанавливаем Git...
+    powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://git-scm.com/download/win', 'git_installer.exe')"
+    start /wait git_installer.exe /VERYSILENT /NORESTART
+    del git_installer.exe
+    setx PATH "%PATH%;C:\Program Files\Git\bin"
+    echo Git успешно установлен.
+)
+
+cd "%ASSISTANT_DIR%"
+git clone %REPO_URL% .
+if %errorlevel% neq 0 (
+    echo Ошибка при клонировании репозитория.
+    pause
+    exit /b 1
+)
 echo Код ассистента успешно загружен.
 
 :: Создание виртуального окружения
 echo Создание виртуального окружения...
-cd "%ASSISTANT_DIR%"
 python -m venv venv
 call "%ASSISTANT_DIR%\venv\Scripts\activate.bat"
 
 :: Установка зависимостей
 echo Установка зависимостей...
 pip install --upgrade pip
-pip install speechrecognition pyttsx3 requests vk-api spotipy pyyaml
+pip install -r requirements.txt
 
-:: Создание конфигурационного файла
-echo Создание конфигурационного файла...
-echo {
-echo     "wake_words": ["ассистент", "помощник", "компьютер"],
-echo     "app_mapping": {
-echo         "браузер": "https://google.com",
-echo         "телеграм": "tg://",
-echo         "вк": "https://vk.com"
-echo     },
-echo     "music_priority": ["vk", "yandex", "spotify"],
-echo     "api_keys": {
-echo         "vk": {"login": "", "password": "", "token": ""},
-echo         "spotify": {"client_id": "", "client_secret": ""},
-echo         "yandex": {"token": ""}
-echo     }
-echo } > "%ASSISTANT_DIR%\assistant_config.json"
+:: Создание стандартного конфига, если его нет
+if not exist "%ASSISTANT_DIR%\assistant_config.json" (
+    echo Создание конфигурационного файла...
+    echo {
+    echo     "wake_words": ["ассистент", "помощник", "компьютер"],
+    echo     "app_mapping": {
+    echo         "браузер": "https://google.com",
+    echo         "телеграм": "tg://",
+    echo         "вк": "https://vk.com"
+    echo     },
+    echo     "music_priority": ["vk", "yandex", "spotify"],
+    echo     "api_keys": {
+    echo         "vk": {"login": "", "password": "", "token": ""},
+    echo         "spotify": {"client_id": "", "client_secret": ""},
+    echo         "yandex": {"token": ""}
+    echo     }
+    echo } > "%ASSISTANT_DIR%\assistant_config.json"
+)
 
 :: Создание ярлыка для запуска
 echo Создание ярлыка для запуска...

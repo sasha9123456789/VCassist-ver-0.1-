@@ -1,0 +1,35 @@
+
+Для установки на Windows
+
+Запустите install_VCAS_ForWindows.bat от имени администратора (правой кнопкой → "Запуск от имени администратора")
+Установщик выполнит все необходимые действия автоматически
+
+Для Linux/MacOS
+
+Cкачайте install_VCAS.sh
+Дайте права на выполнение: chmod +x install_assistant.sh
+Запустите: ./install_assistant.sh
+
+Важные замечания
+Для работы pyttsx3 в Windows нужны драйверы:
+
+Обычно уже установлены с Windows
+
+Если нет - установите "Microsoft Speech Platform"
+
+В Linux может потребоваться:
+sudo apt install espeak ffmpeg libespeak1
+
+Для macOS:
+brew install espeak
+
+
+После установки:
+
+На рабочем столе появится ярлык "Voice Assistant" для запуска
+Все файлы будут находиться в папке %USERPROFILE%\VoiceAssistant
+Вы можете редактировать конфигурацию в файле assistant_config.json
+
+Для Linux/MacOS
+
+Запуск скрипта пока что ручной
